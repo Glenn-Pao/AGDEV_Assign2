@@ -8,12 +8,9 @@
 #include "MatrixStack.h"
 #include "Light.h"
 #include "PlayInfo3PV.h"
-#include "SceneGraph/SceneNode.h"	// Scene Graph
-#include "SpatialPartition/SpatialPartition.h"
 #include "Projectile/ProjectileManager.h"
 #include "Map.h"
 #include "Weapon.h"
-#include "ReadAndWrite.h"
 const float SKYBOXSIZE = 1000.f;
 
 class CSceneManager : public Scene
@@ -172,12 +169,6 @@ private:
 	// Handle to 3rd Person View's avatar
 	CPlayInfo3PV* m_cAvatar;
 
-	// The scene graph
-	CSceneNode* m_cSceneGraph;
-
-	// The spatial partition
-	CSpatialPartition* m_cSpatialPartition;
-
 	// Projectile
 	CProjectileManager* m_cProjectileManager;
 
@@ -187,8 +178,6 @@ private:
 	CWeapon *m_cPistol;	//pistol
 	CWeapon *m_cMG;		//machine gun
 	CWeapon *m_cLG;		//laser gun
-
-	std::vector<CSceneNode*> nodes;
 };
 
 #endif

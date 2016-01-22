@@ -2,9 +2,8 @@
 #include "Vector3.h"
 #include "Mesh.h"
 #include "Camera3.h"
-#include "SceneGraph\SceneNode.h"
 
-class CPlayInfo3PV : public  Base_SCENENODE
+class CPlayInfo3PV
 {
 public:
 	CPlayInfo3PV(void);

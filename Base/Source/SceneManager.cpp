@@ -11,8 +11,6 @@ CSceneManager::CSceneManager(void)
 	: m_window_width(800)
 	, m_window_height(600)
 	, m_cAvatar(NULL)
-	, m_cSceneGraph(NULL)
-	, m_cSpatialPartition(NULL)
 	, m_cProjectileManager(NULL)
 	, m_cPistol(NULL)
 	, m_cMG(NULL)
@@ -25,8 +23,6 @@ CSceneManager::CSceneManager(void)
 
 CSceneManager::CSceneManager(const int m_window_width, const int m_window_height)
 	: m_cAvatar(NULL)
-	, m_cSceneGraph(NULL)
-	, m_cSpatialPartition(NULL)
 	, m_cProjectileManager(NULL)
 	, m_cPistol(NULL)
 	, m_cMG(NULL)
@@ -44,16 +40,6 @@ CSceneManager::~CSceneManager(void)
 	{
 		delete m_cProjectileManager;
 		m_cProjectileManager = NULL;
-	}
-	if (m_cSpatialPartition)
-	{
-		delete m_cSpatialPartition;
-		m_cSpatialPartition = NULL;
-	}
-	if (m_cSceneGraph)
-	{
-		delete m_cSceneGraph;
-		m_cSceneGraph = NULL;
 	}
 	if (m_cAvatar)
 	{
@@ -278,44 +264,6 @@ void CSceneManager::Init()
 	m_cAvatar->Init(Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(0, 1, 0), Vector3(15, 1, 10), Vector3(0, 1,0));
 	m_cAvatar->SetModel(MeshBuilder::GenerateOBJ("OBJ1", "OBJ//stool.obj"));
 
-	//create a scene graph
-		m_cSceneGraph = new CSceneNode();
-		CModel* newModel = new CModel();
-		//newModel->Init();
-		newModel->SetMesh(MeshBuilder::GenerateCube("cube", Color(1, 1, 1), 5.f));
-		newModel->SetActive(true);
-		newModel->SetTopLeft(Vector3(5, 5, 5));
-		newModel->SetBottomRight(Vector3(-5, -5, -5));
-		m_cSceneGraph->SetNode(new CTransform(0, 0, 0), newModel);
-	
-	//head
-	newModel = new CModel();
-	newModel->SetMesh(MeshBuilder::GenerateCube("cube", Color(1, 0, 0), 2.f));
-	childNodeID = m_cSceneGraph->AddChild(new CTransform(0, 3, 0), newModel);
-
-	//ball bottom
-	newModel = new CModel();
-	newModel->SetMesh(MeshBuilder::GenerateSphere("sphere", Color(1, 0, 0), 18, 36, 2.f));
-	childNodeID = m_cSceneGraph->AddChild(new CTransform(0, -5, 0), newModel);
-
-	//m_cSceneGraph->ApplyTranslate(100, 0, 100);
-
-	// Create a spatial partition
-	m_cSpatialPartition = new CSpatialPartition();
-	m_cSpatialPartition->Init(100, 100, 5, 5);
-	for (int i = 0; i < m_cSpatialPartition->GetxNumOfGrid(); i++)
-	{
-		for (int j = 0; j < m_cSpatialPartition->GetyNumOfGrid(); j++)
-		{
-			m_cSpatialPartition->SetGridMesh(i, j, NULL);
-		}
-	}
-
-	//m_cSpatialPartition->PrintSelf();
-
-	// Add the pointers to the scene graph to the spatial partition
-	m_cSpatialPartition->AddObject(m_cSceneGraph);
-	m_cSpatialPartition->AddObject(m_cAvatar->node);
 	// Create the projectile manager
 	m_cProjectileManager = new CProjectileManager();
 
@@ -370,43 +318,7 @@ void CSceneManager::SwapWeapon(double dt)
 }
 void CSceneManager::UpdateParticles(double dt)
 {
-	// Check for collisions fpr Projectiles
-	// Render the projectiles
-	Vector3 ProjectilePosition;
-	Vector3 ProjectilePosition_End;
-	for (int i = 0; i < m_cProjectileManager->GetMaxNumberOfProjectiles(); i++)
-	{
-		if (m_cProjectileManager->IsActive(i))
-		{
-			ProjectilePosition = m_cProjectileManager->theListOfProjectiles[i]->GetPosition();
-
-			if (m_cProjectileManager->theListOfProjectiles[i]->GetType() == CProjectile::PROJ_TYPE_DISCRETE)
-			{
-				//Destroy the projectile after collision
-				if (m_cSpatialPartition->CheckForCollision(ProjectilePosition) == true)
-				{
-					m_cProjectileManager->RemoveProjectile(i);
-					
-					score += 2;
-					cout << "HIT!" << endl;
-				}
-			}
-			else if (m_cProjectileManager->theListOfProjectiles[i]->GetType() == CProjectile::PROJ_TYPE_RAY)
-			{
-				ProjectilePosition_End = ProjectilePosition + m_cProjectileManager->theListOfProjectiles[i]->GetDirection() * m_cProjectileManager->theListOfProjectiles[i]->GetLength();
-
-				// Destroy the projectile after collision
-				if (m_cSpatialPartition->CheckForCollision(ProjectilePosition, ProjectilePosition_End) == true)
-				{
-					m_cProjectileManager->RemoveProjectile(i);
-
-					score += 1;
-					cout << "HIT!" << endl;
-				}
-					
-			}
-		}
-	}
+	
 }
 void CSceneManager::Update(double dt)
 {
@@ -481,13 +393,6 @@ void CSceneManager::Update(double dt)
 	}
 
 	UpdateParticles(dt);
-
-	//clear the grid, update the spatial partition
-	m_cSpatialPartition->Update(camera.position, (camera.target - camera.position).Normalize());
-	m_cSpatialPartition->AddObject(m_cAvatar->node);
-	m_cSpatialPartition->AddObject(m_cSceneGraph);
-	timer += dt;
-	//std::cout << m_cAvatar->node->GetTopLeft() << "," << m_cAvatar->node->GetBottomRight() << std::endl;
 
 	fps = (float)(1.f / dt);
 }
@@ -1046,32 +951,6 @@ void CSceneManager::RenderGUI()
 
 	ss2 << "ProjCount: " << m_cProjectileManager->GetNumberOfActiveProjectiles();
 	RenderTextOnScreen(meshList[GEO_TEXT], ss2.str(), Color(0, 1, 0), 30, 0, 3);
-
-
-
-	//
-	//RenderTextOnScreen(meshList[GEO_TEXT], "Hello Screen", Color(0, 1, 0), 3, 0, 0);
-
-	//Render the spatial partition
-	for (int i = 0; i < m_cSpatialPartition->GetxNumOfGrid(); i++)
-	{
-		for (int j = 0; j < m_cSpatialPartition->GetyNumOfGrid(); j++)
-		{
-			modelStack.PushMatrix();
-			glEnable(GL_CULL_FACE);
-			modelStack.Translate(m_cSpatialPartition->xGridSize * i, 0, m_cSpatialPartition->yGridSize * j);
-			modelStack.Scale(m_cSpatialPartition->xGridSize, m_cSpatialPartition->xGridSize, m_cSpatialPartition->xGridSize);
-			if (m_cSpatialPartition->GetGrid(i, j).GetListOfObject().size() > 0) //if have something make grid green
-			{
-				RenderMeshIn2D(meshList[GEO_SPATIAL_GRID_ICON_FILLED], false, 2.f, 50 + 3 * i, 30 + 3 * j, false);
-			}
-			else
-			{
-				RenderMeshIn2D(meshList[GEO_SPATIAL_GRID_ICON], false, 2.f, 50 + 3 * i, 30 + 3 * j, false);
-			}
-			modelStack.PopMatrix();
-		}
-	}
 }
 
 /********************************************************************************
@@ -1110,21 +989,6 @@ void CSceneManager::RenderMobileObjects()
 	modelStack.Rotate(theta, 0, 1, 0);
 	RenderMesh(m_cAvatar->theAvatarMesh, false);
 	modelStack.PopMatrix();
-	////Render the top left and bottom right
-	//modelStack.PushMatrix();
-	//modelStack.Translate(m_cAvatar->node->GetTopLeft().x, 0, m_cAvatar->node->GetTopLeft().z);
-	//RenderMesh(meshList[GEO_SPHERE], false);
-	//modelStack.PopMatrix();
-
-	//modelStack.PushMatrix();
-	//modelStack.Translate(m_cAvatar->node->GetBottomRight().x, 0, m_cAvatar->node->GetBottomRight().z);
-	//RenderMesh(meshList[GEO_SPHERE], false);
-	//modelStack.PopMatrix();
-
-	m_cSceneGraph->ApplyTranslate(0.01, 0, 0.01);
-	m_cSceneGraph->GetNode(2);
-	// Draw the scene graph
-	m_cSceneGraph->Draw(this);
 }
 
 /********************************************************************************
@@ -1211,27 +1075,6 @@ void CSceneManager::RenderGround()
 		}
 	}
 	modelStack.PopMatrix();
-
-	//Render the spatial partition
-	for (int i = 0; i < m_cSpatialPartition->GetxNumOfGrid(); i++)
-	{
-		for (int j = 0; j < m_cSpatialPartition->GetyNumOfGrid(); j++)
-		{
-			modelStack.PushMatrix();
-			glEnable(GL_CULL_FACE);
-			modelStack.Translate(m_cSpatialPartition->xGridSize * i, -m_cSpatialPartition->yGridSize+42, m_cSpatialPartition->yGridSize * j);
-			modelStack.Scale(m_cSpatialPartition->xGridSize, m_cSpatialPartition->xGridSize, m_cSpatialPartition->xGridSize);
-			if (m_cSpatialPartition->GetGrid(i, j).GetListOfObject().size() > 0) //if have something make grid green
-			{
-				RenderMesh(meshList[GEO_SPATIAL_FILLED], false);
-			}
-			else
-			{
-				RenderMesh(meshList[GEO_SPATIAL_GRID], false);
-			}
-			modelStack.PopMatrix();
-		}
-	}
 }
 /********************************************************************************
  Render this scene

@@ -4,7 +4,6 @@
 #include "SceneManager2D_Highscore.h"
 #include "SceneManager2D.h"
 #include "timer.h"
-#include "ReadAndWrite.h"
 //Include GLEW
 #include <GL/glew.h>
 
@@ -57,8 +56,6 @@ private:
 	double camera_yaw, camera_pitch;
 
 	GLFWwindow* m_window;
-
-	CReadAndWrite *read;			//read from text file
 
 	CSceneManager2D *scene;	// Use this for 2D gameplay
 

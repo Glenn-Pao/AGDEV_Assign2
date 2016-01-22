@@ -2,7 +2,6 @@
 #include "MeshBuilder.h"
 #include "Application.h"
 #include "Camera3.h"
-#include "SceneGraph\Model.h"
 
 
 static float CAMERA_SPEED = 200.f;
@@ -35,15 +34,6 @@ void CPlayInfo3PV::Init(const Vector3& pos, const Vector3& direction, const Vect
 	this->up = defaultUp = right.Cross(view).Normalized();
 	//pitchLimit = 0;
 	avataroffset = 0;
-
-	node = new CSceneNode();
-	CModel* newModel = new CModel();
-	newModel->Init();
-	newModel->SetTopLeft(vTopLeft);
-	newModel->SetBottomRight(vBottomRight);
-	//newModel->SetTopLeft(pos + Vector3(1, 1, 1));	//set the top left of model
-	//newModel->SetBottomRight(pos + Vector3(-1, -1, -1));
-	node->SetNode(new CTransform(curPosition.x, 0, curPosition.z), newModel);
 
 	// Initialise the Avatar's movement flags
 	for(int i=0; i<255; i++){
@@ -332,12 +322,10 @@ void CPlayInfo3PV::Update(Camera3 &camera, double dt)
 	if ( myKeys['w'] == true)
 	{
 		MoveFrontBack( false, dt );
-		node->ApplyTranslate(curPosition.x - node->GetTranslate().x, 0, curPosition.z - node->GetTranslate().z);
 	}
 	if (myKeys['s'] == true)
 	{
 		MoveFrontBack( true, dt );
-		node->ApplyTranslate(curPosition.x - node->GetTranslate().x, 0, curPosition.z - node->GetTranslate().z);
 	}
 	if (myKeys['a'] == true)
 	{
@@ -346,7 +334,6 @@ void CPlayInfo3PV::Update(Camera3 &camera, double dt)
 		{
 			avataroffset -= 20 * dt;
 		}
-		node->ApplyTranslate(curPosition.x - node->GetTranslate().x, 0, curPosition.z - node->GetTranslate().z);
 	}
 	if (myKeys['d'] == true)
 	{
@@ -356,7 +343,6 @@ void CPlayInfo3PV::Update(Camera3 &camera, double dt)
 		{
 			avataroffset += 20 * dt;
 		}
-		node->ApplyTranslate(curPosition.x - node->GetTranslate().x, 0, curPosition.z - node->GetTranslate().z);
 	}
 	else
 	{
